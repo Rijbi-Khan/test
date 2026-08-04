@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Poraverse — Secure Admin Portal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css?v=1.0.5">
+</head>
+<body>
+  <!-- Toast Notification Container -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <!-- AUTHENTICATION CONTAINER (STEP 1 & STEP 2 TOTP) -->
+  <div id="authContainer" class="auth-wrapper">
+    <div class="auth-card glass-panel">
+      <div class="brand-header">
+        <div class="brand-badge">🛡️ SECURE ADMIN PORTAL</div>
+        <h1>Poraverse</h1>
+        <p>Enterprise Moderation & Operations Control</p>
+      </div>
+
+      <!-- STEP 1: EMAIL + PASSWORD FORM -->
+      <form id="step1Form" class="auth-form active" onsubmit="event.preventDefault(); handleStep1Login(event);">
+        <h2>Step 1: Admin Credentials</h2>
+        <p class="form-subtitle">Enter your registered administrative email address and password.</p>
+        
+        <div class="form-group">
+          <label for="adminEmail">Admin Email Address</label>
+          <input type="email" id="adminEmail" placeholder="admin@poraverse.com" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="adminPassword">Password</label>
+          <input type="password" id="adminPassword" placeholder="••••••••••••" required>
+        </div>
+
+        <button type="submit" id="btnStep1" class="btn btn-primary btn-block">
+          <span>Validate Credentials & Proceed</span> →
+        </button>
+      </form>
+
+      <!-- STEP 2: TOTP 2FA FORM -->
+      <form id="step2Form" class="auth-form hidden" onsubmit="event.preventDefault(); handleStep2Login(event);">
+        <div class="step-indicator">
+          <span class="step-tag">STEP 2 OF 2</span>
+        </div>
+        <h2>Mandatory 2FA TOTP</h2>
+        <p class="form-subtitle">Enter the 6-digit verification code from your Google Authenticator or Authy app.</p>
+        
+        <div class="form-group">
+          <label for="totpCode">6-Digit Authenticator Code</label>
+          <input type="text" id="totpCode" maxlength="6" placeholder="123456" autocomplete="off" required>
+        </div>
+
+        <div style="margin-bottom: 16px; text-align: center;">
+          <button type="button" id="btnGetStep2QR" class="btn btn-outline btn-block btn-sm" style="color: var(--primary); border-color: rgba(0, 208, 132, 0.4);" onclick="setup2FAStep2()">
+            📱 First time? Get Authenticator QR Code / Secret Key
+          </button>
+        </div>
+
+        <div class="button-group">
+          <button type="button" id="btnBackToStep1" class="btn btn-secondary" onclick="backToStep1()">← Back</button>
+          <button type="submit" id="btnStep2" class="btn btn-success flex-grow">
+            Verify 2FA & Access Portal
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- DASHBOARD CONTAINER (AFTER FULL 2FA VERIFICATION) -->
+  <div id="dashboardContainer" class="dashboard-wrapper hidden">
+    <!-- Top Navigation Bar -->
+    <header class="navbar glass-panel">
+      <div class="nav-brand">
+        <span class="shield-icon">🛡️</span>
+        <span class="brand-title">Poraverse Admin Portal</span>
+        <span class="env-badge">2FA VERIFIED</span>
+      </div>
+      <div class="nav-user">
+        <span id="navAdminName">Admin User</span>
+        <button id="btnSetup2FA" class="btn btn-outline btn-sm" onclick="setup2FA()">⚙️ 2FA Setup (QR Code)</button>
+        <button id="btnLogout" class="btn btn-danger btn-sm" onclick="logoutAdmin()">🔒 Logout</button>
+      </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <!-- Sidebar Navigation Tabs -->
+      <aside class="sidebar glass-panel">
+        <nav class="side-nav">
+          <button class="nav-tab active" data-tab="moderation" onclick="switchTab('moderation')">
+            <span class="icon">🚩</span> Content Moderation
+          </button>
+          <button class="nav-tab" data-tab="catalog" onclick="switchTab('catalog')">
+            <span class="icon">📚</span> Publisher Catalog
+          </button>
+          <button class="nav-tab" data-tab="orders" onclick="switchTab('orders')">
+            <span class="icon">📦</span> Bundle Orders
+          </button>
+          <button class="nav-tab" data-tab="social" onclick="switchTab('social')">
+            <span class="icon">🌿</span> Social Hero Campaigns
+          </button>
+          <button class="nav-tab" data-tab="roles" onclick="switchTab('roles')">
+            <span class="icon">👥</span> Role Management
+          </button>
+        </nav>
+      </aside>
+
+      <!-- View Sections -->
+      <section class="content-body glass-panel">
+        <!-- MODERATION QUEUE -->
+        <div id="tab-moderation" class="tab-content active">
+          <div class="section-header">
+            <div>
+              <h2>🚩 Moderation Queue & Audit Log</h2>
+              <p>Review user-flagged content reports and audit system actions.</p>
+            </div>
+            <button id="btnRefreshReports" class="btn btn-secondary btn-sm" onclick="loadModerationQueue()">🔄 Refresh Queue</button>
+          </div>
+
+          <div id="reportsList" class="cards-grid">
+            <div class="empty-state">Loading reports...</div>
+          </div>
+        </div>
+
+        <!-- PUBLISHER CATALOG -->
+        <div id="tab-catalog" class="tab-content hidden">
+          <div class="section-header">
+            <div>
+              <h2>📚 Publisher Catalogs</h2>
+              <p>Manage publishers and catalog items for student custom bundles.</p>
+            </div>
+            <button id="btnAddPublisherModal" class="btn btn-primary btn-sm" onclick="openPublisherModal()">+ Add Publisher</button>
+          </div>
+
+          <div id="publishersList" class="cards-grid">
+            <div class="empty-state">Loading publisher catalog...</div>
+          </div>
+        </div>
+
+        <!-- BUNDLE ORDERS -->
+        <div id="tab-orders" class="tab-content hidden">
+          <div class="section-header">
+            <div>
+              <h2>📦 Bundle Fulfillment Orders</h2>
+              <p>Track user escrow orders and update delivery status.</p>
+            </div>
+            <button id="btnRefreshOrders" class="btn btn-secondary btn-sm" onclick="loadBundleOrders()">🔄 Refresh Orders</button>
+          </div>
+
+          <div id="ordersList" class="cards-grid">
+            <div class="empty-state">Loading bundle orders...</div>
+          </div>
+        </div>
+
+        <!-- SOCIAL HERO CAMPAIGNS -->
+        <div id="tab-social" class="tab-content hidden">
+          <div class="section-header">
+            <div>
+              <h2>🌿 Social Hero Campaigns</h2>
+              <p>Create social work initiatives with guidelines for app users.</p>
+            </div>
+            <button id="btnAddCampaignModal" class="btn btn-primary btn-sm" onclick="createCampaignPrompt()">+ Create Campaign</button>
+          </div>
+
+          <div id="campaignsList" class="cards-grid">
+            <div class="empty-state">Loading campaigns...</div>
+          </div>
+        </div>
+
+        <!-- ROLE MANAGEMENT -->
+        <div id="tab-roles" class="tab-content hidden">
+          <div class="section-header">
+            <div>
+              <h2>👥 Admin & Moderator Role Promotion</h2>
+              <p>Promote or update user roles to moderator or admin.</p>
+            </div>
+          </div>
+
+          <div class="form-card">
+            <h3>Upgrade User Role</h3>
+            <div class="form-row">
+              <div class="form-group flex-grow">
+                <label for="roleUserId">Target User ID (UUID)</label>
+                <input type="text" id="roleUserId" placeholder="e.g. 550e8400-e29b-41d4-a716-446655440000">
+              </div>
+              <div class="form-group">
+                <label for="targetRole">Role</label>
+                <select id="targetRole">
+                  <option value="moderator">Moderator</option>
+                  <option value="admin">Admin</option>
+                  <option value="user">User (Demote)</option>
+                </select>
+              </div>
+              <button id="btnUpdateRole" class="btn btn-success self-end">Update Role</button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- ADD PUBLISHER MODAL -->
+  <div id="modalAddPublisher" class="modal-overlay hidden">
+    <div class="modal-card glass-panel" style="max-width: 480px;">
+      <h3>📚 প্রকাশনী যোগ করুন (Add Publisher)</h3>
+      <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">নতুন প্রকাশনীর নাম ও লোগো তথ্য প্রবেশ করান।</p>
+      <form id="formAddPublisher">
+        <div class="form-group" style="margin-bottom: 12px;">
+          <label style="display: block; font-size: 12px; margin-bottom: 4px;">প্রকাশনীর নাম (Publisher Name) *</label>
+          <input type="text" id="pubNameInput" placeholder="যেমন: পাঞ্জেরী পাবলিকেশন্স / লেকচার" required class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: #fff;">
+        </div>
+        <div class="form-group" style="margin-bottom: 12px;">
+          <label style="display: block; font-size: 12px; margin-bottom: 4px;">প্রকাশনীর লোগো (Logo Image URL / Base64)</label>
+          <input type="text" id="pubLogoInput" placeholder="https://example.com/logo.png" class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: #fff;">
+        </div>
+        <div class="form-group" style="margin-bottom: 16px;">
+          <label style="display: block; font-size: 12px; margin-bottom: 4px;">বিবরণ (Description / Short Note)</label>
+          <input type="text" id="pubDescInput" placeholder="যেমন: মাধ্যমিক ও উচ্চ মাধ্যমিক সহায়িকা" class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: #fff;">
+        </div>
+        <div style="display: flex; gap: 10px; justify-content: flex-end;">
+          <button type="button" class="btn btn-secondary" onclick="closePublisherModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Publisher</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ADD BOOK MODAL -->
+  <div id="modalAddBook" class="modal-overlay hidden">
+    <div class="modal-card glass-panel" style="max-width: 520px;">
+      <h3>📖 প্রকাশনীতে বই যোগ করুন (Add Book to Catalog)</h3>
+      <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">বইয়ের নাম, লেখকের নাম, বিষয়, শ্রেণী ও মূল্য সেট করুন।</p>
+      <form id="formAddBook">
+        <input type="hidden" id="bookTargetPubId">
+        <div class="form-group" style="margin-bottom: 12px;">
+          <label style="display: block; font-size: 12px; margin-bottom: 4px;">বইয়ের নাম (Book Title) *</label>
+          <input type="text" id="bookTitleInput" placeholder="যেমন: উচ্চতর গণিত সমাধান ১ম পত্র" required class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: #fff;">
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
+          <div>
+            <label style="display: block; font-size: 12px; margin-bottom: 4px;">লেখকের নাম (Writer Name)</label>
+            <input type="text" id="bookWriterInput" placeholder="যেমন: ড. সিস্টেক রায়" class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: #fff;">
+          </div>
+          <div>
+            <label style="display: block; font-size: 12px; margin-bottom: 4px;">বিষয় (Subject)</label>
+            <input type="text" id="bookSubjectInput" placeholder="যেমন: Higher Math / Physics" class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: #fff;">
+          </div>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
+          <div>
+            <label style="display: block; font-size: 12px; margin-bottom: 4px;">শ্রেণী (Class - Optional)</label>
+            <input type="text" id="bookClassInput" placeholder="যেমন: Class 9 / Class 10 / HSC" class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: #fff;">
+          </div>
+          <div>
+            <label style="display: block; font-size: 12px; margin-bottom: 4px;">মূল্য (Price in BDT ৳) *</label>
+            <input type="number" id="bookPriceInput" placeholder="380" required step="1" class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: #fff;">
+          </div>
+        </div>
+        <div class="form-group" style="margin-bottom: 16px;">
+          <label style="display: block; font-size: 12px; margin-bottom: 4px;">বইয়ের কভার / ফটো (Cover Image URL)</label>
+          <input type="text" id="bookImageInput" placeholder="https://example.com/book-cover.jpg" class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: #fff;">
+        </div>
+        <div style="display: flex; gap: 10px; justify-content: flex-end;">
+          <button type="button" class="btn btn-secondary" onclick="closeBookModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary">Add Book</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="app.js?v=1.0.5"></script>
+</body>
+</html>
