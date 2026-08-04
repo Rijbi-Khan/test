@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../providers/poraverse_provider.dart';
-import '../../theme/app_theme.dart';
 import '../../models/models.dart';
 
 class SocialHeroScreen extends StatefulWidget {
