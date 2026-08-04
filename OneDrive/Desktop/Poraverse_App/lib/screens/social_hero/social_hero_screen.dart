@@ -21,16 +21,16 @@ class _SocialHeroScreenState extends State<SocialHeroScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF0F172A) : const Color(0xFF111827),
+      backgroundColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF7F9FB),
       appBar: AppBar(
-        backgroundColor: isDark ? const Color(0xFF0F172A) : const Color(0xFF111827),
+        backgroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
         elevation: 0,
         surfaceTintColor: Colors.transparent,
         automaticallyImplyLeading: false,
         title: Text(
           'Social Hero',
           style: GoogleFonts.outfit(
-            color: const Color(0xFF10B981),
+            color: const Color(0xFF006D36),
             fontWeight: FontWeight.w700,
             fontSize: 22,
           ),
@@ -38,27 +38,27 @@ class _SocialHeroScreenState extends State<SocialHeroScreen> {
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(48),
           child: Container(
-            color: isDark ? const Color(0xFF0F172A) : const Color(0xFF111827),
+            color: isDark ? const Color(0xFF0F172A) : Colors.white,
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(
               children: [
-                _mainTabBtn('ব্যাজ ও পয়েন্ট (Badges)', 0),
+                _mainTabBtn('ব্যাজ ও পয়েন্ট (Badges)', 0, isDark),
                 const SizedBox(width: 16),
-                _mainTabBtn('সামাজিক কাজ (Social Work) 🌿', 1),
+                _mainTabBtn('সামাজিক কাজ (Social Work) 🌿', 1, isDark),
               ],
             ),
           ),
         ),
       ),
       body: _mainSectionTab == 0
-          ? _buildBadgesView(provider)
+          ? _buildBadgesView(provider, isDark)
           : _selectedCampaign == null
-              ? _buildCampaignsList(provider)
-              : _buildCampaignDetailView(_selectedCampaign!, provider),
+              ? _buildCampaignsList(provider, isDark)
+              : _buildCampaignDetailView(_selectedCampaign!, provider, isDark),
     );
   }
 
-  Widget _mainTabBtn(String label, int index) {
+  Widget _mainTabBtn(String label, int index, bool isDark) {
     final sel = _mainSectionTab == index;
     return GestureDetector(
       onTap: () => setState(() {
@@ -73,7 +73,9 @@ class _SocialHeroScreenState extends State<SocialHeroScreen> {
             child: Text(
               label,
               style: TextStyle(
-                color: sel ? const Color(0xFF10B981) : Colors.grey.shade400,
+                color: sel
+                    ? const Color(0xFF006D36)
+                    : (isDark ? Colors.grey.shade400 : const Color(0xFF64748B)),
                 fontWeight: FontWeight.bold,
                 fontSize: 13,
               ),
@@ -84,7 +86,7 @@ class _SocialHeroScreenState extends State<SocialHeroScreen> {
             height: 3,
             width: 50,
             decoration: BoxDecoration(
-              color: sel ? const Color(0xFF10B981) : Colors.transparent,
+              color: sel ? const Color(0xFF006D36) : Colors.transparent,
               borderRadius: BorderRadius.circular(99),
             ),
           ),
@@ -93,22 +95,27 @@ class _SocialHeroScreenState extends State<SocialHeroScreen> {
     );
   }
 
-  // ─── BADGES & POINTS OVERVIEW (EXACT SCREENSHOT 2 DARK UI) ─────────────
-  Widget _buildBadgesView(PoraverseProvider provider) {
+  // ─── BADGES & POINTS OVERVIEW ─────────────────────────────
+  Widget _buildBadgesView(PoraverseProvider provider, bool isDark) {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        // ── Top Card: Hero Points Banner (Matching Screenshot 2) ────────
+        // ── Top Card: Hero Points Banner ──────────────────────────────────
         Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: const Color(0xFF1E262E),
+            color: isDark ? const Color(0xFF1E262E) : Colors.white,
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: Colors.amber.shade700.withValues(alpha: 0.6), width: 1.5),
+            border: Border.all(
+              color: Colors.amber.shade600.withValues(alpha: isDark ? 0.6 : 0.4),
+              width: 1.5,
+            ),
             boxShadow: [
               BoxShadow(
-                color: Colors.amber.shade900.withValues(alpha: 0.15),
-                blurRadius: 20,
+                color: isDark
+                    ? Colors.amber.shade900.withValues(alpha: 0.15)
+                    : Colors.amber.shade500.withValues(alpha: 0.08),
+                blurRadius: 16,
                 spreadRadius: 2,
               ),
             ],
@@ -135,7 +142,7 @@ class _SocialHeroScreenState extends State<SocialHeroScreen> {
                           Text(
                             'HERO STATUS: ACTIVE',
                             style: GoogleFonts.outfit(
-                              color: Colors.amber.shade400,
+                              color: isDark ? Colors.amber.shade400 : Colors.amber.shade800,
                               fontWeight: FontWeight.bold,
                               fontSize: 10,
                               letterSpacing: 1,
@@ -148,7 +155,7 @@ class _SocialHeroScreenState extends State<SocialHeroScreen> {
                     Text(
                       'Social Hero Points',
                       style: GoogleFonts.outfit(
-                        color: Colors.white,
+                        color: isDark ? Colors.white : const Color(0xFF0F172A),
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
                       ),
@@ -157,7 +164,7 @@ class _SocialHeroScreenState extends State<SocialHeroScreen> {
                     Text(
                       'Contribute to the community and real-world causes to earn points and unlock exclusive badges.',
                       style: TextStyle(
-                        color: Colors.grey.shade400,
+                        color: isDark ? Colors.grey.shade400 : const Color(0xFF475569),
                         fontWeight: FontWeight.w400,
                         fontSize: 12,
                         height: 1.3,
@@ -167,13 +174,13 @@ class _SocialHeroScreenState extends State<SocialHeroScreen> {
                 ),
               ),
               const SizedBox(width: 16),
-              // Golden Points Ring (Matching Screenshot 2)
+              // Golden Points Ring
               Container(
                 width: 86,
                 height: 86,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: const Color(0xFF12181F),
+                  color: isDark ? const Color(0xFF12181F) : const Color(0xFFFFFBEB),
                   border: Border.all(color: Colors.amber.shade500, width: 3),
                   boxShadow: [
                     BoxShadow(
@@ -188,7 +195,7 @@ class _SocialHeroScreenState extends State<SocialHeroScreen> {
                     Text(
                       '450',
                       style: GoogleFonts.outfit(
-                        color: Colors.amber.shade400,
+                        color: isDark ? Colors.amber.shade400 : Colors.amber.shade800,
                         fontSize: 26,
                         fontWeight: FontWeight.bold,
                         height: 1.0,
@@ -198,7 +205,7 @@ class _SocialHeroScreenState extends State<SocialHeroScreen> {
                     Text(
                       'PTS',
                       style: GoogleFonts.outfit(
-                        color: Colors.amber.shade400,
+                        color: isDark ? Colors.amber.shade400 : Colors.amber.shade800,
                         fontSize: 10,
                         fontWeight: FontWeight.bold,
                         letterSpacing: 1,
@@ -219,7 +226,7 @@ class _SocialHeroScreenState extends State<SocialHeroScreen> {
             Text(
               'Active Campaigns',
               style: GoogleFonts.outfit(
-                color: Colors.white,
+                color: isDark ? Colors.white : const Color(0xFF0F172A),
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),
@@ -229,7 +236,7 @@ class _SocialHeroScreenState extends State<SocialHeroScreen> {
               child: const Text(
                 'View All',
                 style: TextStyle(
-                  color: Color(0xFF10B981),
+                  color: Color(0xFF006D36),
                   fontWeight: FontWeight.bold,
                   fontSize: 13,
                 ),
@@ -239,13 +246,22 @@ class _SocialHeroScreenState extends State<SocialHeroScreen> {
         ),
         const SizedBox(height: 14),
 
-        // ── Active Campaign Card (Matching Screenshot 2) ────────────────
+        // ── Active Campaign Card ─────────────────────────────────────────
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: const Color(0xFF1E262E),
+            color: isDark ? const Color(0xFF1E262E) : Colors.white,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.grey.shade800),
+            border: Border.all(color: isDark ? Colors.grey.shade800 : Colors.grey.shade200),
+            boxShadow: isDark
+                ? []
+                : [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.04),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -256,12 +272,12 @@ class _SocialHeroScreenState extends State<SocialHeroScreen> {
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.eco, color: Color(0xFF10B981), size: 20),
+                      const Icon(Icons.eco, color: Color(0xFF006D36), size: 20),
                       const SizedBox(width: 6),
                       Text(
                         'Tree Plantation 2026',
                         style: GoogleFonts.outfit(
-                          color: Colors.white,
+                          color: isDark ? Colors.white : const Color(0xFF0F172A),
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                         ),
@@ -271,13 +287,13 @@ class _SocialHeroScreenState extends State<SocialHeroScreen> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF064E3B),
+                      color: isDark ? const Color(0xFF064E3B) : const Color(0xFFDCFCE7),
                       borderRadius: BorderRadius.circular(20),
                     ),
-                    child: const Text(
+                    child: Text(
                       '+50 PTS',
                       style: TextStyle(
-                        color: Color(0xFF34D399),
+                        color: isDark ? const Color(0xFF34D399) : const Color(0xFF15803D),
                         fontWeight: FontWeight.bold,
                         fontSize: 11,
                       ),
@@ -291,18 +307,18 @@ class _SocialHeroScreenState extends State<SocialHeroScreen> {
                 height: 110,
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF062D1B),
+                  color: isDark ? const Color(0xFF062D1B) : const Color(0xFFF0FDF4),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Center(
-                  child: Icon(Icons.eco, color: Color(0xFF047857), size: 54),
+                  child: Icon(Icons.eco, color: Color(0xFF006D36), size: 54),
                 ),
               ),
               const SizedBox(height: 14),
               Text(
                 'Join the local cyber-arborists this weekend. Scan the QR code at the site to verify participation and claim your environmental badge.',
                 style: TextStyle(
-                  color: Colors.grey.shade300,
+                  color: isDark ? Colors.grey.shade300 : const Color(0xFF334155),
                   fontSize: 12,
                   height: 1.4,
                 ),
@@ -311,10 +327,10 @@ class _SocialHeroScreenState extends State<SocialHeroScreen> {
               // Progress bar
               ClipRRect(
                 borderRadius: BorderRadius.circular(6),
-                child: const LinearProgressIndicator(
+                child: LinearProgressIndicator(
                   value: 0.85,
-                  backgroundColor: Color(0xFF0F172A),
-                  valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF10B981)),
+                  backgroundColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFE2E8F0),
+                  valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF006D36)),
                   minHeight: 6,
                 ),
               ),
@@ -324,7 +340,7 @@ class _SocialHeroScreenState extends State<SocialHeroScreen> {
                 child: Text(
                   '85% FUNDED',
                   style: TextStyle(
-                    color: Colors.grey.shade400,
+                    color: isDark ? Colors.grey.shade400 : const Color(0xFF64748B),
                     fontSize: 10,
                     fontWeight: FontWeight.bold,
                   ),
@@ -341,7 +357,7 @@ class _SocialHeroScreenState extends State<SocialHeroScreen> {
                     }
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF047857),
+                    backgroundColor: const Color(0xFF006D36),
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
@@ -358,61 +374,7 @@ class _SocialHeroScreenState extends State<SocialHeroScreen> {
             ],
           ),
         ),
-        const SizedBox(height: 24),
-
-        // ── Badges Section ─────────────────────────────────────────────
-        Text(
-          'অর্জিত ব্যাজসমূহ (Badges)',
-          style: GoogleFonts.outfit(
-            color: Colors.white,
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 12),
-        GridView.count(
-          crossAxisCount: 2,
-          crossAxisSpacing: 12,
-          mainAxisSpacing: 12,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          children: [
-            _badgeCard('🌱 Tree Planter', '৫টি গাছ রোপণ সম্পন্ন', 'Unlocked', Colors.green),
-            _badgeCard('🌊 Clean Rivers', 'নদী পরিষ্কার অভিযান', 'Unlocked', Colors.blue),
-            _badgeCard('🩸 Blood Hero', '২ বার রক্তদান করেছেন', 'Unlocked', Colors.red),
-            _badgeCard('📚 Edu Helper', '১০ জন শিক্ষার্থীকে সহায়তা', 'Locked', Colors.grey),
-          ],
-        ),
       ],
-    );
-  }
-
-  Widget _badgeCard(String title, String desc, String status, Color color) {
-    bool unlocked = status == 'Unlocked';
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: unlocked ? color.withValues(alpha: 0.15) : const Color(0xFF1E262E),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: unlocked ? color.withValues(alpha: 0.4) : Colors.grey.shade800),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(title, style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: unlocked ? Colors.white : Colors.grey.shade400)),
-          const SizedBox(height: 4),
-          Text(desc, textAlign: TextAlign.center, style: TextStyle(fontSize: 10, color: Colors.grey.shade400)),
-          const SizedBox(height: 6),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-            decoration: BoxDecoration(
-              color: unlocked ? color : Colors.grey.shade700,
-              borderRadius: BorderRadius.circular(4),
-            ),
-            child: Text(status, style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold)),
-          ),
-        ],
-      ),
     );
   }
 
@@ -450,23 +412,24 @@ class _SocialHeroScreenState extends State<SocialHeroScreen> {
   }
 
   // ─── SOCIAL WORK CAMPAIGNS LIST VIEW ─────────────────────
-  Widget _buildCampaignsList(PoraverseProvider provider) {
+  Widget _buildCampaignsList(PoraverseProvider provider, bool isDark) {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: const Color(0xFF1E262E),
+            color: isDark ? const Color(0xFF1E262E) : Colors.white,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xFF10B981).withValues(alpha: 0.3)),
+            border: Border.all(color: const Color(0xFF006D36).withValues(alpha: 0.3)),
+            boxShadow: isDark ? [] : [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8)],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('সামাজিক কাজ ও পরিবেশগত ক্যাম্পেইন 🌿', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white)),
+              Text('সামাজিক কাজ ও পরিবেশগত ক্যাম্পেইন 🌿', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16, color: isDark ? Colors.white : const Color(0xFF0F172A))),
               const SizedBox(height: 4),
-              Text('আপনিও অংশগ্রহণ করুন এবং সমাজের ইতিবাচক পরিবর্তনের অংশ হোন।', style: TextStyle(color: Colors.grey.shade400, fontSize: 12)),
+              Text('আপনিও অংশগ্রহণ করুন এবং সমাজের ইতিবাচক পরিবর্তনের অংশ হোন।', style: TextStyle(color: isDark ? Colors.grey.shade400 : const Color(0xFF475569), fontSize: 12)),
             ],
           ),
         ),
@@ -475,9 +438,10 @@ class _SocialHeroScreenState extends State<SocialHeroScreen> {
           return Container(
             margin: const EdgeInsets.only(bottom: 16),
             decoration: BoxDecoration(
-              color: const Color(0xFF1E262E),
+              color: isDark ? const Color(0xFF1E262E) : Colors.white,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.grey.shade800),
+              border: Border.all(color: isDark ? Colors.grey.shade800 : Colors.grey.shade200),
+              boxShadow: isDark ? [] : [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 3))],
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -496,17 +460,17 @@ class _SocialHeroScreenState extends State<SocialHeroScreen> {
                         children: [
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                            decoration: BoxDecoration(color: const Color(0xFF064E3B), borderRadius: BorderRadius.circular(6)),
-                            child: Text(campaign.category, style: const TextStyle(color: Color(0xFF34D399), fontSize: 11, fontWeight: FontWeight.bold)),
+                            decoration: BoxDecoration(color: isDark ? const Color(0xFF064E3B) : const Color(0xFFDCFCE7), borderRadius: BorderRadius.circular(6)),
+                            child: Text(campaign.category, style: TextStyle(color: isDark ? const Color(0xFF34D399) : const Color(0xFF15803D), fontSize: 11, fontWeight: FontWeight.bold)),
                           ),
                           const Spacer(),
-                          Text('🎯 +100 PTS', style: GoogleFonts.outfit(color: Colors.amber.shade400, fontWeight: FontWeight.bold, fontSize: 12)),
+                          Text('🎯 +100 PTS', style: GoogleFonts.outfit(color: isDark ? Colors.amber.shade400 : Colors.amber.shade800, fontWeight: FontWeight.bold, fontSize: 12)),
                         ],
                       ),
                       const SizedBox(height: 8),
-                      Text(campaign.title, style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white)),
+                      Text(campaign.title, style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16, color: isDark ? Colors.white : const Color(0xFF0F172A))),
                       const SizedBox(height: 4),
-                      Text(campaign.guidelineText, style: TextStyle(color: Colors.grey.shade400, fontSize: 12, height: 1.4), maxLines: 2, overflow: TextOverflow.ellipsis),
+                      Text(campaign.guidelineText, style: TextStyle(color: isDark ? Colors.grey.shade400 : const Color(0xFF475569), fontSize: 12, height: 1.4), maxLines: 2, overflow: TextOverflow.ellipsis),
                       const SizedBox(height: 12),
                       Row(
                         children: [
@@ -516,8 +480,8 @@ class _SocialHeroScreenState extends State<SocialHeroScreen> {
                               icon: const Icon(Icons.remove_red_eye_outlined, size: 16),
                               label: const Text('পোস্টসমূহ দেখুন', style: TextStyle(fontSize: 12)),
                               style: OutlinedButton.styleFrom(
-                                foregroundColor: const Color(0xFF10B981),
-                                side: const BorderSide(color: Color(0xFF10B981)),
+                                foregroundColor: const Color(0xFF006D36),
+                                side: const BorderSide(color: Color(0xFF006D36)),
                               ),
                             ),
                           ),
@@ -527,7 +491,7 @@ class _SocialHeroScreenState extends State<SocialHeroScreen> {
                               onPressed: () => _showParticipateModal(context, campaign, provider),
                               icon: const Icon(Icons.add_a_photo, size: 16),
                               label: const Text('অংশগ্রহণ করুন', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF047857), foregroundColor: Colors.white),
+                              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF006D36), foregroundColor: Colors.white),
                             ),
                           ),
                         ],
@@ -544,24 +508,24 @@ class _SocialHeroScreenState extends State<SocialHeroScreen> {
   }
 
   // ─── CAMPAIGN DETAIL & POSTS VIEW ──────────────────────
-  Widget _buildCampaignDetailView(SocialWorkCampaignModel campaign, PoraverseProvider provider) {
+  Widget _buildCampaignDetailView(SocialWorkCampaignModel campaign, PoraverseProvider provider, bool isDark) {
     final campaignPosts = provider.socialWorkPosts.where((p) => p.campaignId == campaign.id).toList();
 
     return Column(
       children: [
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          color: const Color(0xFF1E262E),
+          color: isDark ? const Color(0xFF1E262E) : Colors.white,
           child: Row(
             children: [
               IconButton(
                 onPressed: () => setState(() => _selectedCampaign = null),
-                icon: const Icon(Icons.arrow_back, color: Colors.white),
+                icon: Icon(Icons.arrow_back, color: isDark ? Colors.white : const Color(0xFF0F172A)),
               ),
               Expanded(
                 child: Text(
                   campaign.title,
-                  style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white),
+                  style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16, color: isDark ? Colors.white : const Color(0xFF0F172A)),
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
@@ -569,7 +533,7 @@ class _SocialHeroScreenState extends State<SocialHeroScreen> {
                 onPressed: () => _showParticipateModal(context, campaign, provider),
                 icon: const Icon(Icons.add, size: 16),
                 label: const Text('পোস্ট করুন', style: TextStyle(fontSize: 11)),
-                style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF047857), foregroundColor: Colors.white),
+                style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF006D36), foregroundColor: Colors.white),
               ),
             ],
           ),
