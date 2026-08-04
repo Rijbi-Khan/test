@@ -254,37 +254,69 @@ function setupEventListeners() {
   });
 }
 
+function compressImage(file, maxWidth, maxHeight, quality, callback) {
+  const reader = new FileReader();
+  reader.readAsDataURL(file);
+  reader.onload = function(e) {
+    const img = new Image();
+    img.src = e.target.result;
+    img.onload = function() {
+      const canvas = document.createElement('canvas');
+      let w = img.width;
+      let h = img.height;
+      if (w > maxWidth) {
+        h = Math.round((h * maxWidth) / w);
+        w = maxWidth;
+      }
+      if (h > maxHeight) {
+        w = Math.round((w * maxHeight) / h);
+        h = maxHeight;
+      }
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, w, h);
+      const compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
+      callback(compressedDataUrl);
+    };
+    img.onerror = function() {
+      callback(e.target.result);
+    };
+  };
+  reader.onerror = function() {
+    showToast('ফাইল রিড করতে ব্যর্থ হয়েছে!', 'error');
+  };
+}
+
 window.handlePublisherLogoFileSelect = function(e) {
   const file = e.target.files[0];
   if (!file) return;
-  const reader = new FileReader();
-  reader.onload = function(evt) {
-    document.getElementById('pubLogoInput').value = evt.target.result;
-    showToast('ডিভাইস থেকে লোগো ফটো লোড হয়েছে!', 'success');
-  };
-  reader.readAsDataURL(file);
+  compressImage(file, 400, 400, 0.7, function(dataUrl) {
+    document.getElementById('pubLogoInput').value = dataUrl;
+    showToast('ডিভাইস থেকে লোগো ফটো লোড ও অপটিমাইজ হয়েছে!', 'success');
+  });
 };
 
 window.handleBookImageFileSelect = function(e) {
   const file = e.target.files[0];
   if (!file) return;
-  const reader = new FileReader();
-  reader.onload = function(evt) {
-    document.getElementById('bookImageInput').value = evt.target.result;
-    showToast('ডিভাইস থেকে কভার ফটো লোড হয়েছে!', 'success');
-  };
-  reader.readAsDataURL(file);
+  compressImage(file, 600, 800, 0.75, function(dataUrl) {
+    document.getElementById('bookImageInput').value = dataUrl;
+    showToast('ডিভাইস থেকে কভার ফটো লোড ও অপটিমাইজ হয়েছে!', 'success');
+  });
 };
 
 window.handleCampaignCoverFileSelect = function(e) {
   const file = e.target.files[0];
   if (!file) return;
-  const reader = new FileReader();
-  reader.onload = function(evt) {
-    document.getElementById('campaignCoverInput').value = evt.target.result;
-    showToast('ডিভাইস থেকে কভার ফটো লোড হয়েছে!', 'success');
-  };
-  reader.readAsDataURL(file);
+  compressImage(file, 900, 600, 0.75, function(dataUrl) {
+    document.getElementById('campaignCoverInput').value = dataUrl;
+    const previewContainer = document.getElementById('campaignCoverPreview');
+    if (previewContainer) {
+      previewContainer.innerHTML = `<img src="${dataUrl}" style="max-height: 140px; border-radius: 8px; border: 1px solid #10B981; margin-top: 6px;">`;
+    }
+    showToast('ডিভাইস ফটো সফলভাবে লোড ও অপটিমাইজ হয়েছে!', 'success');
+  });
 };
 
 window.handleAddPublisherSubmit = async function(e) {
@@ -848,6 +880,8 @@ window.openCampaignModal = function() {
 window.closeCampaignModal = function() {
   document.getElementById('modalAddCampaign').classList.add('hidden');
   document.getElementById('formAddCampaign').reset();
+  const preview = document.getElementById('campaignCoverPreview');
+  if (preview) preview.innerHTML = '';
 };
 
 window.handleAddCampaignSubmit = async function(e) {
