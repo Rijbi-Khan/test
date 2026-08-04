@@ -161,10 +161,10 @@
         <div id="tab-social" class="tab-content hidden">
           <div class="section-header">
             <div>
-              <h2>🌿 Social Hero Campaigns</h2>
-              <p>Create social work initiatives with guidelines for app users.</p>
+              <h2>🌿 Social Hero Campaigns (সামাজিক কাজ ও পরিবেশগত ক্যাম্পেইন)</h2>
+              <p>Create and manage social work initiatives with custom guidelines for app users.</p>
             </div>
-            <button id="btnAddCampaignModal" class="btn btn-primary btn-sm" onclick="createCampaignPrompt()">+ Create Campaign</button>
+            <button id="btnAddCampaignModal" class="btn btn-primary btn-sm" onclick="openCampaignModal()">+ Create Campaign (ক্যাম্পেইন তৈরি করুন)</button>
           </div>
 
           <div id="campaignsList" class="cards-grid">
@@ -288,6 +288,53 @@
     </div>
   </div>
 
-  <script src="app.js?v=1.0.5"></script>
+  <!-- CREATE SOCIAL HERO CAMPAIGN MODAL (ADMIN) -->
+  <div id="modalAddCampaign" class="modal-overlay hidden">
+    <div class="modal-card glass-panel" style="max-width: 540px;">
+      <h3 style="color: #fff; margin-bottom: 6px;">🌿 সামাজিক কাজ ও পরিবেশগত ক্যাম্পেইন তৈরি করুন</h3>
+      <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">অ্যাপ ব্যবহারকারীদের জন্য নতুন ক্যাম্পেইনের শিরোনাম, ক্যাটাগরি, ফটো, পয়েন্ট পুরস্কার ও নিয়মাবলী সেট করুন।</p>
+      <form id="formAddCampaign" onsubmit="event.preventDefault(); handleAddCampaignSubmit(event);">
+        <div class="form-group" style="margin-bottom: 12px;">
+          <label style="display: block; font-size: 12px; margin-bottom: 4px;">ক্যাম্পেইনের নাম (Campaign Title) *</label>
+          <input type="text" id="campaignTitleInput" placeholder="যেমন: বৃক্ষরোপণ কর্মসূচি ২০২৬ (Tree Plantation Campaign)" required class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: #fff;">
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
+          <div>
+            <label style="display: block; font-size: 12px; margin-bottom: 4px;">ক্যাটাগরি / থিম (Category / Theme)</label>
+            <select id="campaignCategorySelect" class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: #0F172A; color: #fff;">
+              <option value="পরিবেশ ও বনায়ন">🌱 পরিবেশ ও বনায়ন</option>
+              <option value="স্বাস্থ্য ও চিকিৎসা">🩸 স্বাস্থ্য ও চিকিৎসা</option>
+              <option value="শিক্ষা সহায়িকা">📚 শিক্ষা সহায়িকা</option>
+              <option value="পরিচ্ছন্নতা অভিযান">🌊 পরিচ্ছন্নতা অভিযান</option>
+              <option value="সামাজিক কল্যাণ">🤝 সামাজিক কল্যাণ</option>
+            </select>
+          </div>
+          <div>
+            <label style="display: block; font-size: 12px; margin-bottom: 4px;">পয়েন্ট পুরস্কার (Points Reward) *</label>
+            <input type="number" id="campaignPointsInput" placeholder="100" value="100" required step="10" class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: #fff;">
+          </div>
+        </div>
+        <div class="form-group" style="margin-bottom: 12px;">
+          <label style="display: block; font-size: 12px; margin-bottom: 4px;">থিম ফটো / কভার ছবি (Cover Photo URL / Device Image)</label>
+          <input type="text" id="campaignCoverInput" placeholder="https://example.com/tree-plantation.jpg (or pick device file below)" class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: #fff;">
+          <input type="file" id="campaignCoverFileInput" accept="image/*" onchange="handleCampaignCoverFileSelect(event)" style="margin-top: 6px; font-size: 11px; color: var(--text-muted); width: 100%;">
+        </div>
+        <div class="form-group" style="margin-bottom: 12px;">
+          <label style="display: block; font-size: 12px; margin-bottom: 4px;">ক্যাম্পেইনের কাস্টম নিয়ম ও নির্দেশনাবলী (Guidelines & Rules) *</label>
+          <textarea id="campaignGuidelineInput" rows="3" placeholder="১. আপনার রোপণ করা গাছের একটি পরিষ্কার ছবি অথবা ছোট ভিডিও ধারণ করুন।&#10;২. গাছের ধরন এবং কোথায় রোপণ করেছেন তা ক্যাপশনে লিখুন।" required class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: #fff; line-height: 1.4;"></textarea>
+        </div>
+        <div class="form-group" style="margin-bottom: 16px;">
+          <label style="display: block; font-size: 12px; margin-bottom: 4px;">বিবরণ / বর্ণনা (Description)</label>
+          <input type="text" id="campaignDescInput" placeholder="যেমন: আপনার রোপণ করা চারাগাছের যত্ন নিন এবং বন্ধুদের উৎসাহিত করুন।" class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: #fff;">
+        </div>
+        <div style="display: flex; gap: 10px; justify-content: flex-end;">
+          <button type="button" class="btn btn-secondary" onclick="closeCampaignModal()">Cancel</button>
+          <button type="submit" class="btn btn-success" style="background: #10B981; color: white;">🚀 Publish Campaign</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="app.js?v=1.0.6"></script>
 </body>
 </html>

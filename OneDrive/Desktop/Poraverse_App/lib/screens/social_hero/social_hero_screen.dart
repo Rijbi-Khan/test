@@ -625,7 +625,7 @@ class _SocialHeroScreenState extends State<SocialHeroScreen> {
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 4),
             child: Row(
-              mainAxisAlignment: Main.spaceAround,
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 TextButton.icon(
                   onPressed: () => provider.toggleLikeSocialWorkPost(post.id),

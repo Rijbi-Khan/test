@@ -276,6 +276,17 @@ window.handleBookImageFileSelect = function(e) {
   reader.readAsDataURL(file);
 };
 
+window.handleCampaignCoverFileSelect = function(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(evt) {
+    document.getElementById('campaignCoverInput').value = evt.target.result;
+    showToast('ডিভাইস থেকে কভার ফটো লোড হয়েছে!', 'success');
+  };
+  reader.readAsDataURL(file);
+};
+
 window.handleAddPublisherSubmit = async function(e) {
   if (e) e.preventDefault();
   const name = document.getElementById('pubNameInput').value.trim();
@@ -830,6 +841,73 @@ async function updateOrderStatus(orderId, status) {
   }
 }
 
+window.openCampaignModal = function() {
+  document.getElementById('modalAddCampaign').classList.remove('hidden');
+};
+
+window.closeCampaignModal = function() {
+  document.getElementById('modalAddCampaign').classList.add('hidden');
+  document.getElementById('formAddCampaign').reset();
+};
+
+window.handleAddCampaignSubmit = async function(e) {
+  if (e) e.preventDefault();
+  const title = document.getElementById('campaignTitleInput').value.trim();
+  const category = document.getElementById('campaignCategorySelect').value;
+  const points = parseInt(document.getElementById('campaignPointsInput').value) || 100;
+  const coverImageUrl = document.getElementById('campaignCoverInput').value.trim();
+  const guidelineText = document.getElementById('campaignGuidelineInput').value.trim();
+  const description = document.getElementById('campaignDescInput').value.trim();
+
+  if (!title || !guidelineText) return showToast('ক্যাম্পেইনের নাম ও কাস্টম নিয়মাবলী প্রদান করুন!', 'error');
+
+  const btnSubmit = document.querySelector('#formAddCampaign button[type="submit"]');
+  const originalText = btnSubmit ? btnSubmit.innerHTML : 'Publish Campaign';
+  if (btnSubmit) {
+    btnSubmit.disabled = true;
+    btnSubmit.innerHTML = '⏳ Publishing Campaign...';
+  }
+
+  try {
+    const res = await fetchWithFallback('/social-work/admin/campaigns', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${state.accessToken}`,
+      },
+      body: JSON.stringify({ title, category, points, coverImageUrl, guidelineText, description }),
+    });
+    const responseData = await res.json();
+    if (!res.ok) throw new Error(responseData.message || 'Failed to publish campaign');
+
+    showToast('সামাজিক কাজ ও পরিবেশগত ক্যাম্পেইন সফলভাবে তৈরি করা হয়েছে!', 'success');
+    closeCampaignModal();
+    loadSocialCampaigns();
+  } catch (err) {
+    showToast(err.message, 'error');
+  } finally {
+    if (btnSubmit) {
+      btnSubmit.disabled = false;
+      btnSubmit.innerHTML = originalText;
+    }
+  }
+};
+
+window.deleteSocialCampaign = async function(campaignId) {
+  if (!confirm('আপনি কি এই সামাজিক কাজ ক্যাম্পেইনটি মুছে ফেলতে চান?')) return;
+  try {
+    const res = await fetchWithFallback(`/social-work/admin/campaigns/${campaignId}/delete`, {
+      method: 'PATCH',
+      headers: { Authorization: `Bearer ${state.accessToken}` },
+    });
+    if (!res.ok) throw new Error('Failed to delete campaign');
+    showToast('ক্যাম্পেইন সফলভাবে মুছে ফেলা হয়েছে!', 'success');
+    loadSocialCampaigns();
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+};
+
 async function loadSocialCampaigns() {
   const container = document.getElementById('campaignsList');
   container.innerHTML = '<div class="empty-state">Loading campaigns...</div>';
@@ -846,44 +924,43 @@ async function loadSocialCampaigns() {
     const campaigns = safeArray(responseData);
 
     if (!campaigns || campaigns.length === 0) {
-      container.innerHTML = '<div class="empty-state">No social campaigns found.</div>';
+      container.innerHTML = '<div class="empty-state">কোনো সামাজিক কাজ ক্যাম্পেইন পাওয়া যায়নি। "+ Create Campaign" বাটনে ক্লিক করে নতুন ক্যাম্পেইন তৈরি করুন।</div>';
       return;
     }
 
-    container.innerHTML = campaigns.map((c) => `
-      <div class="data-card">
-        <div class="data-card-header">
-          <strong style="font-size: 16px;">${c.title}</strong>
-          <span class="data-tag data-tag-green">${c.category || 'General'}</span>
+    container.innerHTML = campaigns.map((c) => {
+      const coverHtml = (c.coverImageUrl && c.coverImageUrl.trim() !== '')
+        ? `<img src="${c.coverImageUrl.trim()}" alt="${c.title}" style="width: 100%; height: 180px; object-fit: cover; border-radius: 10px; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.1);" onerror="this.style.display='none'">`
+        : '';
+
+      const pts = c.points ? c.points : 100;
+
+      return `
+        <div class="data-card" style="background: rgba(20, 26, 38, 0.85); border: 1px solid rgba(16, 185, 129, 0.35); border-radius: 14px; padding: 16px; margin-bottom: 16px;">
+          ${coverHtml}
+          <div class="data-card-header" style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; flex-wrap: wrap; gap: 8px;">
+            <div>
+              <span class="data-tag data-tag-green" style="background: rgba(16, 185, 129, 0.15); color: #34d399; font-weight: bold; padding: 4px 8px; border-radius: 6px; font-size: 11px;">${c.category || 'General Social Work'}</span>
+              <h3 style="margin: 6px 0 0 0; color: #fff; font-size: 17px; font-weight: 700;">${c.title}</h3>
+            </div>
+            <span style="background: rgba(245, 158, 11, 0.2); color: #fbbf24; font-weight: 800; font-size: 12px; padding: 4px 10px; border-radius: 20px; border: 1px solid rgba(245, 158, 11, 0.4);">🎯 +${pts} PTS</span>
+          </div>
+
+          <div style="font-size: 12px; color: #d0d7de; background: rgba(255,255,255,0.04); padding: 10px 12px; border-radius: 8px; margin: 8px 0; border-left: 3px solid #10B981; line-height: 1.4;">
+            <strong style="color: #34d399;">📋 কাস্টম নির্দেশনাবলী ও নিয়মসমূহ:</strong><br>
+            <span style="white-space: pre-wrap;">${c.guidelineText || 'N/A'}</span>
+          </div>
+
+          ${c.description ? `<div style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">${c.description}</div>` : ''}
+
+          <div style="display: flex; justify-content: flex-end; margin-top: 12px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 10px;">
+            <button class="btn btn-danger btn-sm" onclick="deleteSocialCampaign('${c.id}')" style="padding: 6px 14px; font-size: 12px; background: #ff4d4d; color: white; font-weight: bold;">🗑️ Delete Campaign</button>
+          </div>
         </div>
-        <div style="font-size: 12px; color: var(--text-muted);">Guidelines: ${c.guidelineText || c.description || 'N/A'}</div>
-      </div>
-    `).join('');
+      `;
+    }).join('');
   } catch (err) {
     container.innerHTML = `<div class="empty-state" style="color: var(--danger);">Failed: ${err.message}</div>`;
-  }
-}
-
-async function createCampaignPrompt() {
-  const title = prompt('Enter Campaign Title (e.g. Winter Clothes Distribution):');
-  if (!title) return;
-  const category = prompt('Enter Category (e.g. Environment, Charity):') || 'Environment';
-  const guidelineText = prompt('Enter Guideline Text for users:') || 'Attach proof photo.';
-
-  try {
-    const res = await fetchWithFallback('/social-work/admin/campaigns', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${state.accessToken}`,
-      },
-      body: JSON.stringify({ title, category, guidelineText }),
-    });
-    if (!res.ok) throw new Error('Failed to create campaign');
-    showToast('Social Campaign created successfully!', 'success');
-    loadSocialCampaigns();
-  } catch (err) {
-    showToast(err.message, 'error');
   }
 }
 
