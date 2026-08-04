@@ -591,6 +591,8 @@ function closeBookModal() {
   document.getElementById('formAddBook').reset();
 }
 
+window.stateCatalogItems = {};
+
 async function loadCatalog() {
   const container = document.getElementById('publishersList');
   container.innerHTML = '<div class="empty-state">Loading publisher catalog...</div>';
@@ -611,42 +613,64 @@ async function loadCatalog() {
       return;
     }
 
+    stateCatalogItems = {};
+
     container.innerHTML = pubs.map((p) => {
       const itemsList = safeArray(p.items);
+      
       const booksListHtml = (itemsList.length > 0)
-        ? itemsList.map((item) => `
-            <div style="padding: 8px 12px; margin-top: 6px; background: rgba(255,255,255,0.04); border-radius: 8px; display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 13px;">
-              <div>
-                <strong style="color: #fff;">📖 ${item.title}</strong>
-                ${item.writer ? `<span style="color: var(--text-muted); margin-left: 6px; font-size: 11px;">✍️ ${item.writer}</span>` : ''}
-                ${item.subject ? `<span style="background: rgba(0, 200, 150, 0.15); color: #00c896; padding: 2px 6px; border-radius: 4px; font-size: 10px; margin-left: 6px;">${item.subject}</span>` : ''}
-                ${item.className ? `<span style="background: rgba(255, 175, 0, 0.15); color: #ffaf00; padding: 2px 6px; border-radius: 4px; font-size: 10px; margin-left: 4px;">${item.className}</span>` : ''}
+        ? itemsList.map((item) => {
+            stateCatalogItems[item.id] = { ...item, pubName: p.name };
+
+            const bookCoverHtml = (item.imageUrl && item.imageUrl.trim() !== '')
+              ? `<img src="${item.imageUrl.trim()}" alt="Book Cover" style="width: 38px; height: 50px; border-radius: 6px; object-fit: cover; border: 1px solid rgba(255,255,255,0.2);" onerror="this.outerHTML='<span style=\\'font-size:22px;\\'>📖</span>'">`
+              : `<span style="font-size: 22px;">📖</span>`;
+
+            return `
+              <div onclick="openBookDetailModal('${item.id}')" style="padding: 8px 12px; margin-top: 6px; background: rgba(255,255,255,0.04); border-radius: 8px; display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 13px; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.08)'" onmouseout="this.style.background='rgba(255,255,255,0.04)'">
+                <div style="display: flex; align-items: center; gap: 12px; flex: 1; overflow: hidden;">
+                  ${bookCoverHtml}
+                  <div style="overflow: hidden;">
+                    <strong style="color: #fff; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 14px;">${item.title}</strong>
+                    <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 2px;">
+                      ${item.writer ? `<span style="color: var(--text-muted); font-size: 11px;">✍️ ${item.writer}</span>` : ''}
+                      ${item.subject ? `<span style="background: rgba(0, 200, 150, 0.15); color: #00c896; padding: 2px 6px; border-radius: 4px; font-size: 10px;">${item.subject}</span>` : ''}
+                      ${item.className ? `<span style="background: rgba(255, 175, 0, 0.15); color: #ffaf00; padding: 2px 6px; border-radius: 4px; font-size: 10px;">${item.className}</span>` : ''}
+                    </div>
+                  </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px;" onclick="event.stopPropagation();">
+                  <span style="font-weight: bold; color: #4ade80; font-size: 14px;">৳${item.price}</span>
+                  <button class="btn btn-secondary btn-sm" style="padding: 4px 10px; font-size: 11px;" onclick="openBookDetailModal('${item.id}')">🔍 Details</button>
+                  <button class="btn btn-danger btn-sm" style="padding: 4px 8px; font-size: 11px;" onclick="deleteBookItem('${item.id}')">🗑️</button>
+                </div>
               </div>
-              <div style="display: flex; align-items: center; gap: 8px;">
-                <span style="font-weight: bold; color: #4ade80;">৳${item.price}</span>
-                <button class="btn btn-danger btn-sm" style="padding: 2px 6px; font-size: 10px;" onclick="deleteBookItem('${item.id}')">🗑️</button>
-              </div>
-            </div>
-          `).join('')
-        : '<div style="font-size: 12px; color: var(--text-muted); margin-top: 8px; font-style: italic;">কোনো বই যোগ করা হয়নি।</div>';
+            `;
+          }).join('')
+        : '<div style="font-size: 12px; color: var(--text-muted); margin-top: 8px; font-style: italic; padding: 8px;">কোনো বই যোগ করা হয়নি। "+ Add Book" ক্লিক করে বই যোগ করুন।</div>';
+
+      const pubLogoHtml = (p.logoUrl && p.logoUrl.trim() !== '')
+        ? `<img src="${p.logoUrl.trim()}" alt="Logo" style="width: 44px; height: 44px; border-radius: 10px; object-fit: cover; background: #fff; border: 1px solid rgba(255,255,255,0.2);" onerror="this.outerHTML='<span style=\\'font-size:28px;\\'>🏛️</span>'">`
+        : `<span style="font-size: 28px;">🏛️</span>`;
 
       return `
-        <div class="data-card" style="border: 1px solid rgba(0, 200, 150, 0.2); background: rgba(18, 22, 32, 0.7); margin-bottom: 16px; padding: 16px; border-radius: 12px;">
-          <div class="data-card-header" style="display: flex; justify-content: space-between; align-items: center;">
-            <div style="display: flex; align-items: center; gap: 10px;">
-              ${p.logoUrl ? `<img src="${p.logoUrl}" alt="Logo" style="width: 36px; height: 36px; border-radius: 50%; object-fit: cover; background: #fff;" onerror="this.src='https://cdn-icons-png.flaticon.com/512/29/29302.png';">` : '<span style="font-size: 24px;">🏛️</span>'}
+        <div class="data-card" style="border: 1px solid rgba(0, 200, 150, 0.25); background: rgba(18, 22, 32, 0.75); margin-bottom: 16px; padding: 16px; border-radius: 14px;">
+          <div class="data-card-header" style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;" onclick="togglePublisherExpand('${p.id}')">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              ${pubLogoHtml}
               <div>
-                <strong style="font-size: 16px; color: #fff;">${p.name}</strong>
-                <div style="font-size: 11px; color: var(--text-muted);">${p.description || 'Educational Publisher'}</div>
+                <strong style="font-size: 17px; color: #fff; display: block;">${p.name}</strong>
+                <div style="font-size: 12px; color: var(--text-muted);">${p.description || 'Educational Publisher'} • <span style="color: #4ade80; font-weight: bold;">${itemsList.length} টি বই</span></div>
               </div>
             </div>
-            <div style="display: flex; gap: 6px;">
+            <div style="display: flex; gap: 8px; align-items: center;" onclick="event.stopPropagation();">
               <button class="btn btn-secondary btn-sm" onclick="openBookModal('${p.id}')">📖 + Add Book</button>
               <button class="btn btn-danger btn-sm" onclick="deletePublisher('${p.id}')">🗑️ Delete</button>
+              <button class="btn btn-outline btn-sm" onclick="togglePublisherExpand('${p.id}')" id="btnExp_${p.id}">▼ Expand</button>
             </div>
           </div>
-          <div style="margin-top: 12px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 8px;">
-            <div style="font-size: 11px; font-weight: bold; color: var(--text-muted); margin-bottom: 4px;">LISTED BOOKS (${itemsList.length}):</div>
+          <div id="pubContent_${p.id}" style="margin-top: 14px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 10px;">
+            <div style="font-size: 11px; font-weight: bold; color: var(--text-muted); margin-bottom: 6px; letter-spacing: 0.5px;">LISTED BOOKS (${itemsList.length}):</div>
             ${booksListHtml}
           </div>
         </div>
@@ -656,6 +680,59 @@ async function loadCatalog() {
     container.innerHTML = `<div class="empty-state" style="color: var(--danger);">Failed: ${err.message}</div>`;
   }
 }
+
+window.togglePublisherExpand = function(pubId) {
+  const content = document.getElementById(`pubContent_${pubId}`);
+  const btn = document.getElementById(`btnExp_${pubId}`);
+  if (!content) return;
+  if (content.style.display === 'none') {
+    content.style.display = 'block';
+    if (btn) btn.innerHTML = '▲ Collapse';
+  } else {
+    content.style.display = 'none';
+    if (btn) btn.innerHTML = '▼ Expand';
+  }
+};
+
+window.openBookDetailModal = function(itemId) {
+  const item = stateCatalogItems[itemId];
+  if (!item) return showToast('বইয়ের তথ্য পাওয়া যায়নি!', 'error');
+
+  const modal = document.getElementById('modalBookDetail');
+  const container = document.getElementById('bookDetailContent');
+  if (!modal || !container) return;
+
+  const imageHtml = (item.imageUrl && item.imageUrl.trim() !== '')
+    ? `<div style="text-align: center; margin-bottom: 14px; background: rgba(0,0,0,0.4); padding: 12px; border-radius: 12px;">
+         <img src="${item.imageUrl.trim()}" alt="${item.title}" style="max-height: 280px; max-width: 100%; object-fit: contain; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
+       </div>`
+    : `<div style="text-align: center; margin-bottom: 14px; font-size: 64px; padding: 20px; background: rgba(255,255,255,0.05); border-radius: 12px;">📖</div>`;
+
+  container.innerHTML = `
+    ${imageHtml}
+    <h3 style="color: #fff; margin-bottom: 6px; font-size: 18px;">${item.title}</h3>
+    <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 12px;">🏛️ <strong>প্রকাশনী:</strong> ${item.pubName || 'Publisher'}</div>
+    
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; background: rgba(255,255,255,0.05); padding: 12px; border-radius: 10px; font-size: 13px; margin-bottom: 14px; text-align: left;">
+      <div>✍️ <strong>লেখক:</strong> ${item.writer || 'N/A'}</div>
+      <div>📘 <strong>বিষয়:</strong> ${item.subject || 'General'}</div>
+      <div>🎓 <strong>শ্রেণী:</strong> ${item.className || 'General'}</div>
+      <div>💰 <strong>মূল্য:</strong> <span style="color: #4ade80; font-weight: bold;">৳${item.price}</span></div>
+    </div>
+
+    <div style="display: flex; gap: 10px; justify-content: flex-end;">
+      <button class="btn btn-secondary" onclick="closeBookDetailModal()">Close</button>
+      <button class="btn btn-danger" onclick="deleteBookItem('${item.id}'); closeBookDetailModal();">🗑️ Delete Book</button>
+    </div>
+  `;
+
+  modal.classList.remove('hidden');
+};
+
+window.closeBookDetailModal = function() {
+  const modal = document.getElementById('modalBookDetail');
+  if (modal) modal.classList.add('hidden');
+};
 
 async function createPublisherPrompt() {
   openPublisherModal();
