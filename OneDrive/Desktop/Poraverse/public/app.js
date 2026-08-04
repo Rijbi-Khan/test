@@ -237,6 +237,122 @@ function setupEventListeners() {
   });
 }
 
+window.handlePublisherLogoFileSelect = function(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(evt) {
+    document.getElementById('pubLogoInput').value = evt.target.result;
+    showToast('ডিভাইস থেকে লোগো ফটো লোড হয়েছে!', 'success');
+  };
+  reader.readAsDataURL(file);
+};
+
+window.handleBookImageFileSelect = function(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(evt) {
+    document.getElementById('bookImageInput').value = evt.target.result;
+    showToast('ডিভাইস থেকে কভার ফটো লোড হয়েছে!', 'success');
+  };
+  reader.readAsDataURL(file);
+};
+
+window.handleAddPublisherSubmit = async function(e) {
+  if (e) e.preventDefault();
+  const name = document.getElementById('pubNameInput').value.trim();
+  const logoUrl = document.getElementById('pubLogoInput').value.trim();
+  const description = document.getElementById('pubDescInput').value.trim();
+
+  if (!name) return showToast('প্রকাশনীর নাম লিখুন!', 'error');
+
+  const btnSubmit = document.querySelector('#formAddPublisher button[type="submit"]');
+  const originalText = btnSubmit ? btnSubmit.innerHTML : 'Save Publisher';
+  if (btnSubmit) {
+    btnSubmit.disabled = true;
+    btnSubmit.innerHTML = '⏳ Saving Publisher...';
+  }
+
+  try {
+    const res = await fetchWithFallback('/admin/publications', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${state.accessToken}`,
+      },
+      body: JSON.stringify({ name, logoUrl, description: description || 'Educational Publisher' }),
+    });
+    const responseData = await res.json();
+    if (!res.ok) throw new Error(responseData.message || 'Failed to create publisher');
+
+    showToast('প্রকাশনী সফলভাবে যোগ করা হয়েছে!', 'success');
+    closePublisherModal();
+    loadCatalog();
+  } catch (err) {
+    showToast(err.message, 'error');
+    alert('Publisher Save Error: ' + err.message);
+  } finally {
+    if (btnSubmit) {
+      btnSubmit.disabled = false;
+      btnSubmit.innerHTML = originalText;
+    }
+  }
+};
+
+window.handleAddBookSubmit = async function(e) {
+  if (e) e.preventDefault();
+  const pubId = document.getElementById('bookTargetPubId').value;
+  const title = document.getElementById('bookTitleInput').value.trim();
+  const writer = document.getElementById('bookWriterInput').value.trim();
+  const subject = document.getElementById('bookSubjectInput').value.trim();
+  const className = document.getElementById('bookClassInput').value.trim();
+  const price = parseFloat(document.getElementById('bookPriceInput').value);
+  const imageUrl = document.getElementById('bookImageInput').value.trim();
+
+  if (!pubId || !title || isNaN(price)) return showToast('বইয়ের সঠিক তথ্য ও মূল্য প্রদান করুন!', 'error');
+
+  const btnSubmit = document.querySelector('#formAddBook button[type="submit"]');
+  const originalText = btnSubmit ? btnSubmit.innerHTML : 'Add Book';
+  if (btnSubmit) {
+    btnSubmit.disabled = true;
+    btnSubmit.innerHTML = '⏳ Saving Book...';
+  }
+
+  try {
+    const res = await fetchWithFallback(`/admin/publications/${pubId}/items`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${state.accessToken}`,
+      },
+      body: JSON.stringify({
+        title,
+        price,
+        writer,
+        subject,
+        className,
+        imageUrl,
+        category: subject || 'Guide Book',
+      }),
+    });
+    const responseData = await res.json();
+    if (!res.ok) throw new Error(responseData.message || 'Failed to add book');
+
+    showToast('বই সফলভাবে প্রকাশনীতে যোগ করা হয়েছে!', 'success');
+    closeBookModal();
+    loadCatalog();
+  } catch (err) {
+    showToast(err.message, 'error');
+    alert('Book Save Error: ' + err.message);
+  } finally {
+    if (btnSubmit) {
+      btnSubmit.disabled = false;
+      btnSubmit.innerHTML = originalText;
+    }
+  }
+};
+
 function switchTab(tabName) {
   document.querySelectorAll('.nav-tab').forEach((t) => {
     if (t.dataset.tab === tabName) t.classList.add('active');

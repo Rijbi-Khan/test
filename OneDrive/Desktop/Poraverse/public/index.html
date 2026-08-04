@@ -209,14 +209,15 @@
     <div class="modal-card glass-panel" style="max-width: 480px;">
       <h3>📚 প্রকাশনী যোগ করুন (Add Publisher)</h3>
       <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">নতুন প্রকাশনীর নাম ও লোগো তথ্য প্রবেশ করান।</p>
-      <form id="formAddPublisher">
+      <form id="formAddPublisher" onsubmit="event.preventDefault(); handleAddPublisherSubmit(event);">
         <div class="form-group" style="margin-bottom: 12px;">
           <label style="display: block; font-size: 12px; margin-bottom: 4px;">প্রকাশনীর নাম (Publisher Name) *</label>
           <input type="text" id="pubNameInput" placeholder="যেমন: পাঞ্জেরী পাবলিকেশন্স / লেকচার" required class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: #fff;">
         </div>
         <div class="form-group" style="margin-bottom: 12px;">
-          <label style="display: block; font-size: 12px; margin-bottom: 4px;">প্রকাশনীর লোগো (Logo Image URL / Base64)</label>
-          <input type="text" id="pubLogoInput" placeholder="https://example.com/logo.png" class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: #fff;">
+          <label style="display: block; font-size: 12px; margin-bottom: 4px;">প্রকাশনীর লোগো (Logo Image URL / Device Photo)</label>
+          <input type="text" id="pubLogoInput" placeholder="https://example.com/logo.png (or pick device file below)" class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: #fff;">
+          <input type="file" id="pubLogoFileInput" accept="image/*" onchange="handlePublisherLogoFileSelect(event)" style="margin-top: 6px; font-size: 11px; color: var(--text-muted); width: 100%;">
         </div>
         <div class="form-group" style="margin-bottom: 16px;">
           <label style="display: block; font-size: 12px; margin-bottom: 4px;">বিবরণ (Description / Short Note)</label>
@@ -235,7 +236,7 @@
     <div class="modal-card glass-panel" style="max-width: 520px;">
       <h3>📖 প্রকাশনীতে বই যোগ করুন (Add Book to Catalog)</h3>
       <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">বইয়ের নাম, লেখকের নাম, বিষয়, শ্রেণী ও মূল্য সেট করুন।</p>
-      <form id="formAddBook">
+      <form id="formAddBook" onsubmit="event.preventDefault(); handleAddBookSubmit(event);">
         <input type="hidden" id="bookTargetPubId">
         <div class="form-group" style="margin-bottom: 12px;">
           <label style="display: block; font-size: 12px; margin-bottom: 4px;">বইয়ের নাম (Book Title) *</label>
@@ -262,8 +263,9 @@
           </div>
         </div>
         <div class="form-group" style="margin-bottom: 16px;">
-          <label style="display: block; font-size: 12px; margin-bottom: 4px;">বইয়ের কভার / ফটো (Cover Image URL)</label>
-          <input type="text" id="bookImageInput" placeholder="https://example.com/book-cover.jpg" class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: #fff;">
+          <label style="display: block; font-size: 12px; margin-bottom: 4px;">বইয়ের কভার / ফটো (Cover Image URL / Device Photo)</label>
+          <input type="text" id="bookImageInput" placeholder="https://example.com/book-cover.jpg (or pick device file below)" class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: #fff;">
+          <input type="file" id="bookImageFileInput" accept="image/*" onchange="handleBookImageFileSelect(event)" style="margin-top: 6px; font-size: 11px; color: var(--text-muted); width: 100%;">
         </div>
         <div style="display: flex; gap: 10px; justify-content: flex-end;">
           <button type="button" class="btn btn-secondary" onclick="closeBookModal()">Cancel</button>
