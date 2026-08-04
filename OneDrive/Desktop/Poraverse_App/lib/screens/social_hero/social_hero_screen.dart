@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -416,6 +417,39 @@ class _SocialHeroScreenState extends State<SocialHeroScreen> {
     );
   }
 
+  Widget _buildSmartCoverImage(String? src) {
+    if (src == null || src.trim().isEmpty) return const SizedBox.shrink();
+    final trimmed = src.trim();
+
+    if (trimmed.startsWith('data:image') || trimmed.contains('base64,')) {
+      try {
+        final base64String = trimmed.contains('base64,') ? trimmed.split('base64,').last : trimmed;
+        final bytes = base64Decode(base64String);
+        return Image.memory(
+          bytes,
+          height: 160,
+          width: double.infinity,
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+        );
+      } catch (e) {
+        return const SizedBox.shrink();
+      }
+    }
+
+    if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+      return Image.network(
+        trimmed,
+        height: 160,
+        width: double.infinity,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+      );
+    }
+
+    return const SizedBox.shrink();
+  }
+
   // ─── SOCIAL WORK CAMPAIGNS LIST VIEW ─────────────────────
   Widget _buildCampaignsList(PoraverseProvider provider) {
     return ListView(
@@ -452,7 +486,7 @@ class _SocialHeroScreenState extends State<SocialHeroScreen> {
                 if (campaign.coverImageUrl != null && campaign.coverImageUrl!.isNotEmpty)
                   ClipRRect(
                     borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                    child: Image.network(campaign.coverImageUrl!, height: 140, width: double.infinity, fit: BoxFit.cover, errorBuilder: (_, __, ___) => const SizedBox.shrink()),
+                    child: _buildSmartCoverImage(campaign.coverImageUrl),
                   ),
                 Padding(
                   padding: const EdgeInsets.all(14),
