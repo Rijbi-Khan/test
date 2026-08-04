@@ -1,23 +1,40 @@
 // Poraverse Admin Web Portal Client
 
 async function fetchWithFallback(endpoint, options = {}) {
-  // If running online, target live API backend
-  if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-    const apiBase = window.location.hostname.includes('poraverse-backend-2.onrender.com')
-      ? ''
-      : 'https://poraverse-backend-2.onrender.com';
-    return await fetch(`${apiBase}${endpoint}`, options);
+  options.headers = options.headers || {};
+  if (state && state.accessToken && !options.headers['Authorization'] && !options.headers['authorization']) {
+    options.headers['Authorization'] = `Bearer ${state.accessToken}`;
   }
+
+  const apiBase = (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1')
+    ? (window.location.hostname.includes('poraverse-backend-2.onrender.com') ? '' : 'https://poraverse-backend-2.onrender.com')
+    : 'http://localhost:8080';
+
   try {
-    const res = await fetch(`http://localhost:8080${endpoint}`, options);
-    if (!res.ok && res.status >= 500) {
-      console.warn('Local backend error, falling back to Render Cloud backend...');
-      return await fetch(`https://poraverse-backend-2.onrender.com${endpoint}`, options);
+    const res = await fetch(`${apiBase}${endpoint}`, options);
+    if (res.status === 401 && !endpoint.includes('/auth/admin/login') && !endpoint.includes('/auth/admin/verify-2fa')) {
+      console.warn('Session expired or unauthorized request to:', endpoint);
+      if (state && state.accessToken) {
+        state.accessToken = null;
+        localStorage.removeItem('admin_access_token');
+        localStorage.removeItem('admin_refresh_token');
+        showToast('সেশনের মেয়াদ শেষ হয়ে গেছে। অনুগ্রহ করে পুনরায় লগইন করুন।', 'warning');
+        const dash = document.getElementById('dashboardContainer');
+        const auth = document.getElementById('authContainer');
+        const f1 = document.getElementById('step1Form');
+        const f2 = document.getElementById('step2Form');
+        if (dash) dash.classList.add('hidden');
+        if (auth) auth.classList.remove('hidden');
+        if (f1) f1.classList.remove('hidden');
+        if (f2) f2.classList.add('hidden');
+      }
     }
     return res;
   } catch (e) {
-    console.warn('Local backend unreachable. Falling back to Render Cloud backend...');
-    return await fetch(`https://poraverse-backend-2.onrender.com${endpoint}`, options);
+    if (apiBase !== 'https://poraverse-backend-2.onrender.com') {
+      return await fetch(`https://poraverse-backend-2.onrender.com${endpoint}`, options);
+    }
+    throw e;
   }
 }
 
