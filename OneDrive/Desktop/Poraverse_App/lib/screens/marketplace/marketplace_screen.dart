@@ -319,7 +319,7 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
       backgroundColor: AppTheme.bgSecondary,
       onRefresh: () async {
         await Future.delayed(const Duration(milliseconds: 600));
-        provider.notifyListeners();
+        if (mounted) setState(() {});
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
