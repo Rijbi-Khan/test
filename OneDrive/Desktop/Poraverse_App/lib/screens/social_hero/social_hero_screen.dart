@@ -574,7 +574,7 @@ class _SocialHeroScreenState extends State<SocialHeroScreen> {
 
   Widget _buildSocialPostCard(SocialWorkPostModel post, PoraverseProvider provider) {
     final commentCtrl = TextEditingController();
-    final isLiked = post.likes.contains(provider.currentUser.id);
+    final isLiked = post.likedUserIds.contains(provider.currentUser.id);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
